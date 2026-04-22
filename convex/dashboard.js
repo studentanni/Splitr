@@ -5,7 +5,7 @@ import { internal } from "./_generated/api";
 export const getUserBalances = query({
   handler: async (ctx) => {
     // Use the existing getCurrentUser function instead of repeating auth logic
-    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const user = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     /* ───────────── 1‑to‑1 expenses (no groupId) ───────────── */
     const expenses = (await ctx.db.query("expenses").collect()).filter(
@@ -87,7 +87,7 @@ export const getUserBalances = query({
 // Get total spent in the current year
 export const getTotalSpent = query({
   handler: async (ctx) => {
-    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const user = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     // Get start of current year timestamp
     const currentYear = new Date().getFullYear();
@@ -125,7 +125,7 @@ export const getTotalSpent = query({
 // Get monthly spending
 export const getMonthlySpending = query({
   handler: async (ctx) => {
-    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const user = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     // Get current year
     const currentYear = new Date().getFullYear();
@@ -188,7 +188,7 @@ export const getMonthlySpending = query({
 // Get groups for the current user
 export const getUserGroups = query({
   handler: async (ctx) => {
-    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const user = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     // Get all groups
     const allGroups = await ctx.db.query("groups").collect();
@@ -261,5 +261,63 @@ export const getUserGroups = query({
     );
 
     return enhancedGroups;
+  },
+});
+
+// Get anomaly status and insights
+export const getAnomalyStatus = query({
+  handler: async (ctx) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUserInternal);
+    
+    // Get anomalous expenses
+    const anomalousExpenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_user_and_group", (q) => q.eq("paidByUserId", user._id))
+      .filter((q) => q.eq(q.field("isAnomalous"), true))
+      .collect();
+
+    // Get basic stats for insights
+    const allExpenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_user_and_group", (q) => q.eq("paidByUserId", user._id))
+      .collect();
+
+    const totalExpenses = allExpenses.length;
+    const averageAmount = totalExpenses > 0 
+      ? allExpenses.reduce((sum, e) => sum + e.amount, 0) / totalExpenses 
+      : 0;
+
+    return {
+      anomalousCount: anomalousExpenses.length,
+      anomalousExpenses: anomalousExpenses.slice(0, 5),
+      statistics: {
+        totalExpenses,
+        averageAmount,
+      }
+    };
+  },
+});
+
+// Get recent expenses for the dashboard
+export const getRecentDashboardExpenses = query({
+  handler: async (ctx) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUserInternal);
+    
+    // Get all expenses where user is involved
+    const allExpenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_date")
+      .order("desc")
+      .collect();
+
+    // Filter for user involvement and take the last 10
+    const userExpenses = allExpenses
+      .filter(e => 
+        e.paidByUserId === user._id || 
+        e.splits.some(s => s.userId === user._id)
+      )
+      .slice(0, 10);
+
+    return userExpenses;
   },
 });

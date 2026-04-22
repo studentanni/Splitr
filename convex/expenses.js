@@ -22,7 +22,7 @@ export const createExpense = mutation({
   },
   handler: async (ctx, args) => {
     // Use centralized getCurrentUser function
-    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const user = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     // If there's a group, verify the user is a member
     if (args.groupId) {
@@ -50,16 +50,40 @@ export const createExpense = mutation({
     }
 
     // Create the expense
+    // Auto-categorize expense using AI if no category provided
+    let finalCategory = args.category;
+    if (!finalCategory) {
+      try {
+        const aiCategory = await ctx.runAction(internal.groqAI.categorizeExpense, {
+          description: args.description,
+          amount: args.amount,
+        });
+        finalCategory = aiCategory.category;
+      } catch (error) {
+        console.error("AI categorization failed:", error);
+        finalCategory = "Other";
+      }
+    }
+
     const expenseId = await ctx.db.insert("expenses", {
       description: args.description,
       amount: args.amount,
-      category: args.category || "Other",
+      category: finalCategory,
       date: args.date,
       paidByUserId: args.paidByUserId,
       splitType: args.splitType,
       splits: args.splits,
       groupId: args.groupId,
       createdBy: user._id,
+    });
+
+    // Run anomaly detection asynchronously
+    await ctx.scheduler.runAfter(0, internal.anomalyDetection.detectAnomalyAndSave, {
+      expenseId,
+      userId: args.paidByUserId,
+      amount: args.amount,
+      description: args.description,
+      category: args.category,
     });
 
     return expenseId;
@@ -72,7 +96,7 @@ export const createExpense = mutation({
 export const getExpensesBetweenUsers = query({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
-    const me = await ctx.runQuery(internal.users.getCurrentUser);
+    const me = await ctx.runQuery(internal.users.getCurrentUserInternal);
     if (me._id === userId) throw new Error("Cannot query yourself");
 
     /* ───── 1. One-on-one expenses where either user is the payer ───── */
@@ -174,7 +198,7 @@ export const deleteExpense = mutation({
   },
   handler: async (ctx, args) => {
     // Get the current user
-    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const user = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     // Get the expense
     const expense = await ctx.db.get(args.expenseId);
@@ -220,5 +244,166 @@ export const deleteExpense = mutation({
     await ctx.db.delete(args.expenseId);
 
     return { success: true };
+  },
+});
+
+// ----------- ML Functions for Anomaly Detection -----------
+
+// Get user expenses for ML analysis
+export const getUserExpensesForML = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const expenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_user_and_group", (q) => 
+        q.eq("paidByUserId", args.userId)
+      )
+      .collect();
+
+    return expenses
+      .filter(expense => expense.date < Date.now()) // Only past expenses
+      .sort((a, b) => b.date - a.date)
+      .slice(0, 50);
+  },
+});
+
+// Get a single expense for ML analysis
+export const getExpenseForML = query({
+  args: {
+    expenseId: v.id("expenses"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.expenseId);
+  },
+});
+
+// Get recent expenses for batch analysis
+export const getRecentExpenses = query({
+  args: {
+    userId: v.id("users"),
+    cutoffDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const expenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_user_and_group", (q) => 
+        q.eq("paidByUserId", args.userId)
+      )
+      .collect();
+
+    return expenses
+      .filter(expense => 
+        expense.date >= args.cutoffDate && 
+        expense.date < Date.now()
+      )
+      .sort((a, b) => b.date - a.date);
+  },
+});
+
+// Update expense with anomaly analysis results
+export const updateExpenseAnomaly = mutation({
+  args: {
+    expenseId: v.id("expenses"),
+    isAnomalous: v.boolean(),
+    anomalyScore: v.number(),
+    anomalyReason: v.string(),
+    predictedAmount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.expenseId, {
+      isAnomalous: args.isAnomalous,
+      anomalyScore: args.anomalyScore,
+      anomalyReason: args.anomalyReason,
+      predictedAmount: args.predictedAmount,
+    });
+  },
+});
+
+// Get anomalous expenses for user
+export const getAnomalousExpenses = query({
+  args: {
+    userId: v.id("users"),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10;
+    
+    const expenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_user_and_group", (q) => 
+        q.eq("paidByUserId", args.userId)
+      )
+      .collect();
+
+    return expenses
+      .filter(expense => expense.isAnomalous === true)
+      .sort((a, b) => (b.anomalyScore || 0) - (a.anomalyScore || 0))
+      .slice(0, limit);
+  },
+});
+
+// Get expenses by category for analysis
+export const getExpensesByCategory = query({
+  args: {
+    userId: v.id("users"),
+    category: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const expenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_user_and_group", (q) => 
+        q.eq("paidByUserId", args.userId)
+      )
+      .collect();
+
+    return expenses
+      .filter(expense => expense.category === args.category)
+      .sort((a, b) => b.date - a.date);
+  },
+});
+
+// Get monthly spending trend
+export const getMonthlySpending = query({
+  args: {
+    userId: v.id("users"),
+    months: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const months = args.months || 6;
+    const cutoffDate = Date.now() - (months * 30 * 24 * 60 * 60 * 1000);
+    
+    const expenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_user_and_group", (q) => 
+        q.eq("paidByUserId", args.userId)
+      )
+      .collect();
+
+    const monthlyData = {};
+    
+    expenses
+      .filter(expense => expense.date >= cutoffDate)
+      .forEach(expense => {
+        const date = new Date(expense.date);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = {
+            month: monthKey,
+            total: 0,
+            count: 0,
+            expenses: []
+          };
+        }
+        
+        monthlyData[monthKey].total += expense.amount;
+        monthlyData[monthKey].count += 1;
+        monthlyData[monthKey].expenses.push(expense);
+      });
+
+    return Object.values(monthlyData)
+      .sort((a, b) => a.month.localeCompare(b.month));
   },
 });

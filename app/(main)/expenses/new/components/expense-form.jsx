@@ -270,9 +270,9 @@ export function ExpenseForm({ type = "individual", onSuccess }) {
               participants={participants}
               onParticipantsChange={setParticipants}
             />
-            {participants.length <= 1 && (
-              <p className="text-xs text-amber-600">
-                Please add at least one other participant
+            {participants.length === 1 && (
+              <p className="text-xs text-muted-foreground">
+                Only you are involved in this expense. It will be tracked as a personal expense.
               </p>
             )}
           </div>
@@ -354,7 +354,7 @@ export function ExpenseForm({ type = "individual", onSuccess }) {
       <div className="flex justify-end">
         <Button
           type="submit"
-          disabled={isSubmitting || participants.length <= 1}
+          disabled={isSubmitting || participants.length < 1}
         >
           {isSubmitting ? "Creating..." : "Create Expense"}
         </Button>

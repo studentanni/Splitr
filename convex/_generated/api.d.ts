@@ -13,14 +13,18 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as anomalyDetection from "../anomalyDetection.js";
 import type * as contacts from "../contacts.js";
 import type * as dashboard from "../dashboard.js";
+import type * as debug from "../debug.js";
 import type * as email from "../email.js";
 import type * as expenses from "../expenses.js";
+import type * as groqAI from "../groqAI.js";
 import type * as groups from "../groups.js";
 import type * as inngest from "../inngest.js";
 import type * as seed from "../seed.js";
 import type * as settlements from "../settlements.js";
+import type * as testAnomaly from "../testAnomaly.js";
 import type * as users from "../users.js";
 
 /**
@@ -32,14 +36,18 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  anomalyDetection: typeof anomalyDetection;
   contacts: typeof contacts;
   dashboard: typeof dashboard;
+  debug: typeof debug;
   email: typeof email;
   expenses: typeof expenses;
+  groqAI: typeof groqAI;
   groups: typeof groups;
   inngest: typeof inngest;
   seed: typeof seed;
   settlements: typeof settlements;
+  testAnomaly: typeof testAnomaly;
   users: typeof users;
 }>;
 export declare const api: FilterApi<

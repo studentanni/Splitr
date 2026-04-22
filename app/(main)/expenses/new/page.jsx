@@ -27,7 +27,14 @@ export default function NewExpensePage() {
             <TabsContent value="individual" className="mt-0">
               <ExpenseForm
                 type="individual"
-                onSuccess={(id) => router.push(`/person/${id}`)}
+                onSuccess={(id) => {
+                  if (id) {
+                    router.push(`/person/${id}`);
+                  } else {
+                    router.push("/dashboard");
+                    router.refresh();
+                  }
+                }}
               />
             </TabsContent>
             <TabsContent value="group" className="mt-0">

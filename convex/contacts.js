@@ -8,8 +8,8 @@ import { internal } from "./_generated/api";
    ──────────────────────────────────────────────────────────────────────── */
 export const getAllContacts = query({
   handler: async (ctx) => {
-    // Use the centralized getCurrentUser instead of duplicating auth logic
-    const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
+    // Use centralized getCurrentUser function
+    const currentUser = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     /* ── personal expenses where YOU are the payer ─────────────────────── */
     const expensesYouPaid = await ctx.db
@@ -89,8 +89,8 @@ export const createGroup = mutation({
     members: v.array(v.id("users")),
   },
   handler: async (ctx, args) => {
-    // Use the centralized getCurrentUser instead of duplicating auth logic
-    const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
+    // Use centralized getCurrentUser function
+    const currentUser = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     if (!args.name.trim()) throw new Error("Group name cannot be empty");
 

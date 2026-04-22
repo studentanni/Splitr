@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 export const store = mutation({
@@ -43,7 +43,7 @@ export const getCurrentUser = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Not authenticated");
+      return null;
     }
 
     const user = await ctx.db
@@ -53,9 +53,24 @@ export const getCurrentUser = query({
       )
       .first();
 
-    if (!user) {
-      throw new Error("User not found");
+    return user;
+  },
+});
+
+// Internal version of getCurrentUser
+export const getCurrentUserInternal = internalQuery({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
     }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .first();
 
     return user;
   },
@@ -68,7 +83,7 @@ export const searchUsers = query({
   },
   handler: async (ctx, args) => {
     // Use centralized getCurrentUser function
-    const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
+    const currentUser = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     // Don't search if query is too short
     if (args.query.length < 2) {

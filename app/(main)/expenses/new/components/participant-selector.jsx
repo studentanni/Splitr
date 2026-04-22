@@ -88,19 +88,18 @@ export function ParticipantSelector({ participants, onParticipantsChange }) {
           </Badge>
         ))}
 
-        {participants.length < 2 && (
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 gap-1 text-xs"
-                type="button"
-              >
-                <UserPlus className="h-3.5 w-3.5" />
-                Add person
-              </Button>
-            </PopoverTrigger>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1 text-xs"
+              type="button"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              <span>Add person</span>
+            </Button>
+          </PopoverTrigger>
             <PopoverContent className="p-0" align="start">
               <Command>
                 <CommandInput
@@ -152,7 +151,6 @@ export function ParticipantSelector({ participants, onParticipantsChange }) {
               </Command>
             </PopoverContent>
           </Popover>
-        )}
       </div>
     </div>
   );

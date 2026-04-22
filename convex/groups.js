@@ -8,7 +8,7 @@ export const getGroupOrMembers = query({
   },
   handler: async (ctx, args) => {
     // Use centralized getCurrentUser function
-    const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
+    const currentUser = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     // Get all groups where the user is a member
     const allGroups = await ctx.db.query("groups").collect();
@@ -81,7 +81,7 @@ export const getGroupExpenses = query({
   args: { groupId: v.id("groups") },
   handler: async (ctx, { groupId }) => {
     // Use centralized getCurrentUser function
-    const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
+    const currentUser = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     const group = await ctx.db.get(groupId);
     if (!group) throw new Error("Group not found");

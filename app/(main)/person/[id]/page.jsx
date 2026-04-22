@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
@@ -21,8 +21,18 @@ export default function PersonExpensesPage() {
 
   const { data, isLoading } = useConvexQuery(
     api.expenses.getExpensesBetweenUsers,
-    { userId: params.id }
+    params.id !== "undefined" ? { userId: params.id } : "skip"
   );
+
+  useEffect(() => {
+    if (params.id === "undefined") {
+      router.push("/dashboard");
+    }
+  }, [params.id, router]);
+
+  if (params.id === "undefined") {
+    return null;
+  }
 
   if (isLoading) {
     return (

@@ -16,8 +16,8 @@ export const createSettlement = mutation({
     relatedExpenseIds: v.optional(v.array(v.id("expenses"))),
   },
   handler: async (ctx, args) => {
-    // Use centralized getCurrentUser function
-    const caller = await ctx.runQuery(internal.users.getCurrentUser);
+    // Current user identity
+    const caller = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     /* ── basic validation ────────────────────────────────────────────────── */
     if (args.amount <= 0) throw new Error("Amount must be positive");
@@ -70,7 +70,7 @@ export const getSettlementData = query({
   },
   handler: async (ctx, args) => {
     // Use centralized getCurrentUser function
-    const me = await ctx.runQuery(internal.users.getCurrentUser);
+    const me = await ctx.runQuery(internal.users.getCurrentUserInternal);
 
     if (args.entityType === "user") {
       /* ─────────────────────────────────────────────── user page */

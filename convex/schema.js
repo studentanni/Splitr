@@ -30,6 +30,11 @@ export default defineSchema({
     ),
     groupId: v.optional(v.id("groups")), // null for one-on-one expenses
     createdBy: v.id("users"), // Reference to users table
+    // ML fields for anomaly detection
+    isAnomalous: v.optional(v.boolean()),
+    anomalyScore: v.optional(v.number()),
+    anomalyReason: v.optional(v.string()),
+    predictedAmount: v.optional(v.number()),
   })
     .index("by_group", ["groupId"])
     .index("by_user_and_group", ["paidByUserId", "groupId"])
