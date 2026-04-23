@@ -1,135 +1,84 @@
-# Splitr - AI-Powered Splitwise Clone by Sandesh 
+# AI Splitwise Clone - Full Stack Expense Management 💸
 
-![splitr](https://github.com/user-attachments/assets/11e138c4-efcf-4a85-8586-f2993da118d8)
+Welcome to the **AI Splitwise Clone**! This is a modern, full-stack expense-sharing application built with Next.js, Convex, and AI-powered insights.
 
-A modern, AI-powered expense splitting application built with Next.js, Convex, and Groq AI. Features smart expense categorization, real-time updates, and seamless bill splitting.
+## ✨ Features
 
-## Features
+- **Split Expenses**: Split bills with friends, roommates, or groups easily.
+- **AI Anomaly Detection**: Powered by **Groq (llama-3.3-70b-versatile)** to detect unusual spending patterns.
+- **Spending Insights**: Monthly AI-generated financial advice based on your spending.
+- **Real-time Updates**: Powered by **Convex** for a seamless, live experience.
+- **Authentication**: Secure login and sign-up with **Clerk**.
+- **Modern UI**: Clean and responsive design using **Tailwind CSS** and **Shadcn UI**.
 
-- **AI-Powered Categorization** - Automatically categorize expenses using Groq AI
-- **Real-time Updates** - Live expense tracking and balance updates
-- **Smart Bill Splitting** - Equal, percentage, and exact amount splits
-- **Group Management** - Create and manage expense groups
-- **Beautiful Dashboard** - Track spending patterns and monthly insights
-- **Secure Authentication** - Powered by Clerk
-- **Mobile Responsive** - Works perfectly on all devices
+## 🚀 Getting Started
 
-## Tech Stack
+Follow these steps to run the project locally:
 
-- **Frontend**: Next.js 15, React, TailwindCSS, Shadcn UI
-- **Backend**: Convex (Database + Real-time)
-- **AI**: Groq AI (Llama 3) for expense categorization
-- **Authentication**: Clerk
-- **Deployment**: Vercel + Convex Cloud
+### 1. Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed.
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ 
-- Git
-
-### Installation
-
-1. Clone the repository
+### 2. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/splitr.git
-cd splitr
+git clone <your-repository-url>
+cd ai-splitwise-clone
 ```
 
-2. Install dependencies
+### 3. Install Dependencies
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
-3. Set up environment variables
-```bash
-cp .env.example .env.local
-```
+### 4. Environment Variables
+Create a `.env.local` file in the root directory and add the following:
 
-4. Add your API keys to `.env.local`:
-```bash
+```env
 # Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key_here
-CLERK_SECRET_KEY=sk_test_your_clerk_secret_key_here
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_pub_key
+CLERK_SECRET_KEY=your_clerk_secret_key
 
 # Convex Backend
-NEXT_PUBLIC_CONVEX_URL=https://your-project-name.convex.cloud
-CONVEX_DEPLOYMENT_KEY=your_convex_deployment_key_here
+CONVEX_DEPLOYMENT=your_convex_deployment_name
+NEXT_PUBLIC_CONVEX_URL=your_convex_url
 
-# Groq AI for expense categorization
-GROQ_API_KEY=gsk_your_groq_api_key_here
+# AI (Groq)
+GROQ_API_KEY=your_groq_api_key
 
-# Optional: Resend Email
-RESEND_API_KEY=your_resend_api_key_here
-RESEND_FROM_EMAIL=noreply@yourdomain.com
+# Email (Resend)
+RESEND_API_KEY=your_resend_api_key
 ```
 
-### Running the App
+### 5. Run the Project
+You need to run two commands in separate terminals:
 
-1. Start the Convex backend:
+**Terminal 1: Convex Backend**
 ```bash
 npx convex dev
 ```
 
-2. Start the Next.js frontend:
+**Terminal 2: Next.js Frontend**
 ```bash
 npm run dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
+The app will be available at `http://localhost:3000`.
 
-## API Keys Setup
+## 🌐 Deployment
 
-### 1. Clerk Authentication
-- Go to [Clerk Dashboard](https://dashboard.clerk.com/)
-- Create a new project
-- Copy your Publishable and Secret keys
+### Frontend (Next.js)
+Deploy on **Vercel** by connecting your GitHub repository. Make sure to add all environment variables in the Vercel dashboard.
 
-### 2. Convex Backend
-- Go to [Convex Dashboard](https://dashboard.convex.dev/)
-- Create a new project
-- Copy your deployment URL and key
+### Backend (Convex)
+Convex manages its own serverless backend. When you deploy to production, Convex will provide a production URL. You do **not** need Render for this project.
 
-### 3. Groq AI (Free)
-- Go to [Groq Console](https://console.groq.com/)
-- Sign up and get your API key
-- Free tier includes plenty of requests for testing
+## 🛠️ Tech Stack
 
-## Deployment
+- **Framework**: Next.js 15
+- **Database & Backend**: Convex
+- **Auth**: Clerk
+- **AI**: Groq SDK (Llama 3.3)
+- **Styling**: Tailwind CSS + Shadcn UI
+- **Background Jobs**: Inngest
 
-### Vercel (Frontend)
-
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy!
-
-### Convex (Backend)
-
-```bash
-npx convex deploy
-```
-
-## Project Structure
-
-```
-splitr/
-|-- app/                 # Next.js app router
-|-- components/          # React components
-|-- convex/              # Convex backend functions
-|-- lib/                 # Utility functions
-|-- public/              # Static assets
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License.
-
-## Built by Sandesh
-
-A modern expense splitting solution for the digital age.
+---
+Developed for **Sandesh** 🚀
